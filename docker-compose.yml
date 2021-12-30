@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  docker.demo:
+    image: ${DOCKER_REGISTRY-}dockerdemo
+    build:
+      context: .
+      dockerfile: Docker.Demo/Dockerfile
+  rabbitmq:
+    image: masstransit/rabbitmq:latest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
