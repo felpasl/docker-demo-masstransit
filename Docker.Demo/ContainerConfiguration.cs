@@ -2,6 +2,7 @@
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MassTransit;
 using System;
 
 namespace Docker.Demo
@@ -10,9 +11,21 @@ namespace Docker.Demo
     {
         public static IServiceProvider Configure()
         {
-            var serviceCollection = new ServiceCollection();
+            IServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddLogging(l => l.AddConsole())
-                .Configure<LoggerFilterOptions>(c => c.MinLevel = LogLevel.Trace);
+                .Configure<LoggerFilterOptions>(c => c.MinLevel = LogLevel.Debug);
+            serviceCollection.AddMassTransit(x =>
+            {
+                x.AddConsumer<EventConsumer>();
+
+                x.UsingRabbitMq((context, cfg) => {
+                    cfg.Host("rabbitmq");
+                    cfg.ReceiveEndpoint("event-listener", e =>
+                    {
+                        e.ConfigureConsumer<EventConsumer>(context);
+                    });
+                });
+            });
 
             var containerBuilder = new ContainerBuilder();
 
